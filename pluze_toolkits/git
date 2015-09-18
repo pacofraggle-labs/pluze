@@ -1,0 +1,96 @@
+#!/bin/bash
+
+##DOC: Git common operations
+##DOC:
+
+##DOC: s: git status
+function s() {
+  git status
+}
+
+##DOC: cfg <user.name> <user.email>: Change user.email
+function cfg() {
+  if [ $# -ne 2 ]; then
+    echo "ERROR: 2 parameters exected"
+    return 255
+  fi
+  echo git config --global user.name "$1"
+  echo git config --global user.email $2
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    git config --global user.name "$1"
+    git config --global user.email $2
+  fi
+}
+
+##DOC: l (s): git log (--stat if 's')
+function l() {
+  if [ $1 == "s" ]; then
+    echo git log --stat
+    git log --stat
+  else
+    echo git log
+    git log
+  fi
+}
+
+##DOC: sp: git smart-pull
+function sp() {
+  echo git smart-pull
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    git smart-pull
+  fi
+}
+
+## DOC: dno <commit>: Show files changed since the given commit
+function dno() {
+  if [ $# -eq 1 ]; then
+    echo git diff --name-only $1
+    git diff --name-only $1
+  fi
+}
+
+##DOC: pom: git push origin master
+function pom() {
+  echo git push origin master
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    git push origin master
+  fi
+}
+
+##DOC: po: push origin current_branch
+function po() {
+local current
+
+  if [ $# -eq 1 ]; then
+    current=$1
+  else
+    current=`git branch | grep "^*" | cut -d " " -f 2`
+  fi
+
+  echo git push origin $current
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    git push origin $current
+  fi
+}
+
+##DOC: cm: git checkout master
+function cm() {
+
+  echo git checkout master
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    git checkout master
+  fi
+}
+
+##DOC: c <branch>: git checkout branch
+function c() {
+
+  if [ $# -ne 1 ]; then
+    echo "ERROR branch parameter missing"
+    return 255
+  fi
+  echo git checkout $1
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    git checkout $1
+  fi
+}

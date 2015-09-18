@@ -1,0 +1,62 @@
+#!/bin/bash
+
+##DOC: ffmpeg classic usages
+##DOC:
+
+##DOC: convert <format> <quality> <file>: 
+##DOC:   format:  avi, mp4, mpg, etc
+##DOC:   quality: 3, 4, 5, etc
+##DOC:   file:    File to convert
+function convert() {
+local filname
+local destname
+local dest
+local format
+local quality
+local i
+  IFS="
+"
+  if [ $# -ne 3 ]; then 
+    echo "ERROR: 3 parameters expected"
+    return 255
+  fi
+  format=$1
+  shift
+  quality=$1
+  shift
+  for i in $*; do
+    filename=`basename "$i"`
+    destname="${filename%.*}"
+    dest="${destname}.$format"
+    echo "ffmpeg -i $i -q:v $quality $dest"
+    ffmpeg -i $i -q:v $quality "$dest"
+  done 
+}
+
+##DOC: extract_audio <bitrate> <file>: Extract mp3 from video
+##DOC:   <bitrate>: 320, 192, 128, etc
+##DOC:   <file>:    Video file
+function extract_audio() {
+local filename
+local dest
+
+  if [ $# -ne 2 ]; then 
+    echo "ERROR: 2 parameters expected"
+    return 255
+  fi
+  filename=`basename $2`
+  dest="${filename%.*}"
+
+  echo "ffmpeg -i $2 -vn -ac 2 -ar 44100 -ab $1k -f mp3 ${dest}.mp3"
+  ffmpeg -i $2 -vn -ac 2 -ar 44100 -ab $1k -f mp3 ${dest}.mp3
+}
+
+##DOC: chunk <file> <start> <end>: Cut a piece of the video
+function chunk() {
+  if [ $# -ne 3 ]; then 
+    echo "ERROR: 3 parameters expected"
+    return 255
+  fi
+  echo "ffmpeg -i $1 -ss $2 -to $3 -acodec copy -vcodec copy chunk-$1"
+  ffmpeg -i $1 -ss $2 -to $3 -acodec copy -vcodec copy chunk-$1
+}

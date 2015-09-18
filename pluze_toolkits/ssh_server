@@ -1,0 +1,92 @@
+#!/bin/bash
+
+if [ -z $PROD_SERVER ]; then
+  echo "ERROR: PROD_SERVER variable not set"
+  exit 255
+fi
+
+if [ -z $PROD_SERVER_USER ]; then
+  PROD_SERVER_USER=`who am i | cut -d " " -f 1`
+fi
+
+if [ -z $PROD_SERVER_PORT ]; then
+  PROD_SERVER_PORT=22
+fi
+
+##DOC: Common server communications that assume public key sharing
+##DOC:
+
+##DOC: up <files>+: scp to server
+function up() {
+
+  if [ $# -eq 0 ]; then
+    echo "WARNING: nothing to copy"
+    return 255
+  fi
+
+  echo "scp -r -P $PROD_SERVER_PORT $* $PROD_SERVER_USER@$PROD_SERVER:"
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    scp -r -P $PROD_SERVER_PORT $* ${PROD_SERVER_USER}@${PROD_SERVER}:
+  fi
+}
+
+##DOC: down <file_filter> <local_dest>: scp from server
+function down() {
+local dest
+
+  if [ $# -eq 0 ]; then
+    echo "WARNING: nothing to download"
+    return 255
+  fi
+
+  if [ "x"$2 == "x" ]; then
+    dest='.'
+  else
+    dest=$2
+  fi
+
+  echo "scp -r -P $PROD_SERVER_PORT $PROD_SERVER_USER@$PROD_SERVER:$1 $dest"
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    scp -r -P $PROD_SERVER_PORT ${PROD_SERVER_USER}@${PROD_SERVER}:$1 $dest
+  fi
+}
+
+##DOC: tdown <file_filter> <local_dest>: Get server files from tmp
+function tdown() {
+  down /tmp/$1 $2
+}
+
+##DOC: go: ssh
+function go() {
+  echo ssh -p $PROD_SERVER_PORT $PROD_SERVER_USER@$PROD_SERVER
+  ssh -p $PROD_SERVER_PORT $PROD_SERVER_USER@$PROD_SERVER
+}
+
+##DOC: cssh (windows): Open cluster-ssh connections with server (4 by default)
+function cssh() {
+local windows
+local s
+local i
+local dir
+
+  if [ $# -eq 0 ]; then
+    windows=4
+  else
+    windows=$1
+  fi
+
+  s=""
+  i=0;
+  while [ $i -lt $windows ]; do
+    s="$s $PROD_SERVER_USER@$PROD_SERVER:$PROD_SERVER_PORT"
+    i=$[i+1]
+  done
+  command=`which csshX`
+  if [ "x"$command == "x" ]; then
+    command=$CSSH_HOME/csshX
+  fi
+  dir=`dirname $command`
+  cd $dir
+
+  ./csshX $s
+}

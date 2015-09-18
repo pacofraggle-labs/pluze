@@ -1,0 +1,41 @@
+#!/bin/bash
+
+##DOC: taskwarrior common operations
+##DOC:
+
+##DOC: a <project> (start y/n) <Description>: Add task to project
+function a() {
+
+  if [ $# -eq 0 ]; then
+    echo "ERROR: project parameter missing"
+    return 255
+  fi
+
+  project=$1
+  shift
+
+  if [ $1 == 'y' ]; then
+    on=1
+    shift
+  else
+    on=0
+  fi
+
+  task add project:$project "$*"
+
+  if [ $on -eq 1 ]; then
+    ID=$(task rc._forcecolor=no rc.defaultwidth=300 newest | head -4 | tail -1 | cut -d " " -f 1)
+    task start $ID
+  fi
+}
+
+##DOC: l <project>: List for project
+function l() {
+
+  if [ $# -eq 0 ]; then
+    echo "ERROR: project parameter missing"
+    return 255
+  fi
+
+  task list project:$1
+}

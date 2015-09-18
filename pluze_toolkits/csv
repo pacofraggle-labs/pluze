@@ -1,0 +1,10 @@
+#!/bin/bash
+
+##DOC: Operations over CSV files. 
+##DOC: Warning: no delimiter except for "," is being taken into account
+##DOC:
+
+##DOC: countlinecols <file>: Count the number of columns of each line
+function countlinecols() {
+  awk 'BEGIN{FS=","}{print NF}' $1
+}

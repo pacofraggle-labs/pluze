@@ -1,0 +1,87 @@
+#!/bin/bash
+
+##DOC: MAC OSX common commands
+##DOC:
+
+##DOC: o <file>: Open known file types
+function o() {
+local app
+local prog
+
+  if [ $# -ne 1 ]; then
+    echo "File parameter missing"
+    return 255
+  fi
+  if [ -a $1 ]; then
+    app=`guessApp "$1"` 
+    if [ $app == "ANY" ]; then
+      open "$1"
+    else
+      open -a $app "$1"
+    fi
+  else 
+    prog=$1
+    shift
+    open -a $prog "$1"
+  fi
+}
+
+function guessApp() { # Internal
+local app
+local ext
+
+  ext=`echo $1 | awk 'BEGIN{FS="."}{print $NF}'`  
+  case "$ext" in
+    txt) 
+      app="macvim"
+      ;;
+    csv) 
+      app="libreoffice"
+      ;;
+    xls) 
+      app="libreoffice"
+      ;;
+    doc) 
+      app="libreoffice"
+      ;;
+    *) 
+      app="ANY"
+  esac
+
+  echo $app;
+}
+
+##DOC: img-dim <files+>: image width and height
+function img-dim() {
+local i
+IFS="
+"
+  for i in $*; do
+    if [ -f $i ]; then
+      sips -g pixelWidth -g pixelHeight $i
+    else
+      echo "Skipping $i"
+    fi
+  done
+}
+
+##DOC: img-ratio <files+>: images aspect-ratios (h/w)
+function img-ratio() {
+local i
+local w
+local h
+local ratio
+IFS="
+"
+  for i in $*; do
+    if [ -f $i ]; then
+      w=`sips -g pixelWidth $i | tail -n 1 | cut -d ":" -f 2`
+      h=`sips -g pixelHeight $i | tail -n 1 | cut -d ":" -f 2`
+      ratio=`echo $h/$w | bc -l`
+      echo "$i: $ratio"
+    else
+      echo "Skipping $i"
+    fi
+  done
+
+}

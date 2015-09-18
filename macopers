@@ -1,0 +1,8 @@
+#!/bin/bash
+
+shfolder=`dirname $0`
+. "$shfolder/pluze_bootstrap"
+
+pluze_load "mac_basic"
+
+pluze_run $*

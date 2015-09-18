@@ -1,0 +1,177 @@
+#!/bin/bash
+
+##DOC: Bulk operations on file names
+##DOC:
+
+##DOC: name_folderize <folder+>:
+##DOC:  Gets files from a folder and appends folder-name to their filename
+function name_folderize() {
+local folder
+local ini
+
+  if [ $# -eq 0 ]; then
+    echo "WARNING: no folder passed"
+    return
+  fi
+
+  IFS="	
+"
+  for folder in $*; do
+    echo $folder folder ...
+    if [ -d $folder ]; then
+      for file in $folder/*; do
+        if [ -f $file ]; then
+          ini=`basename "$file"`
+          echo "mv $folder/$ini $folder/$folder-$ini"
+          if [ $PLUZE_DRYRUN -eq 0 ]; then
+            mv "$folder/$ini" "$folder/$folder-$ini"
+          fi
+        fi
+      done
+    else
+      echo WARNING: $folder is not a folder. Nothing done
+    fi
+  done
+}
+
+##DOC: name_inverse <files+>:
+##DOC:  Reverts filenames
+function name_inverse() {
+  IFS="	
+"
+  for i in $*; do
+    if [ -f $i ]; then
+      rev=`echo $i | awk '{for(i=length($0);i>=1; i--) printf "%s",substr($0,i,1);}'`
+      if [ -a $rev ]; then
+        echo $rev already exists. $i not inverted
+        continue
+      fi
+      echo $i "->" $rev
+      if [ $PLUZE_DRYRUN -eq 0 ]; then
+        mv "$i" "$rev"
+      fi
+    fi
+  done
+}
+
+function Tolower() { # Internal
+  echo $1 | awk 'BEGIN{FS=" "}{for(i=1; i<=NF; i++) {word=tolower($i); if (i<NF) printf "%s ", word; else printf "%s", word}}'
+}
+
+function Toupper() { # Internal
+  echo $1 | awk 'BEGIN{FS=" "}{for(i=1; i<=NF; i++) {word=toupper($i); if (i<NF) printf "%s ", word; else printf "%s", word}}'
+}
+
+function Ucfirst() { # Internal
+  echo $tospaces | awk 'BEGIN{FS=" "}{for(i=1; i<=NF; i++) {ini=toupper(substr($i,1,1)); rest=tolower(substr($i,2)); if (i<NF) printf "%s%s ", ini, rest; else printf "%s%s", ini, rest}}'
+}
+
+##DOC: name_format (--ucf|--low|--upp) <file+>:
+##DOC:   Converts file names to Upercase first/Lowercase/Uppercase replacing spaces with underscores
+##DOC:   and extensions converted to lowercase
+function name_format() {
+local mode
+local file
+local ext
+local tolowertext
+local base
+local tospaces
+local call
+local format
+local tounder
+local result
+
+  if [ $# -lt 2 ]; then
+    echo "ERROR: Not enough parameters"
+    return 255
+  fi
+
+  if [ $1 == "--ucf" ]; then
+    mode="Ucfirst"
+    shift
+  elif [ $1 == "--low" ]; then
+    mode="Tolower"
+    shift
+  elif [ $1 == "--upp" ]; then
+    mode="Toupper"
+    shift
+  else 
+    mode="Tolower"
+  fi
+
+  IFS="
+"
+
+  for file in `ls -1 $1`; do
+    ext=`echo $file | awk 'BEGIN{FS="."}{if (index($0,".")==0) print ""; else print $NF}'`
+    tolowerext=`echo $ext | LC_ALL=C tr '[:upper:]' '[:lower:]'`
+    base=`basename $file .$ext`
+    tospaces=`echo $base | LC_ALL=C tr "_" " " | LC_ALL=C sed "s/-/ - /g"`
+    # echo $tospaces ...
+    call="$mode \"$tospaces\""
+    format=`eval $call`
+
+    # echo $format ...
+    tounder=`echo $format | LC_ALL=C sed 's/ - /-/g' | LC_ALL=C tr " " "_"`
+    if [ "x"$tolowerext == "x" ]; then
+      result=$tounder
+    else
+      result=$tounder.$tolowerext
+    fi
+    echo "$file => $result"
+    if [ $PLUZE_DRYRUN -eq 0 ]; then
+      mv "$file" "$result"
+    fi
+  done
+}
+
+##DOC: name_label <text> <suffix/prefix> <file+>:
+##DOC:   adds prefix to file names
+function name_label() {
+local file
+local dir
+local f
+local ext
+local name
+local res
+local label
+local mode
+  IFS="
+"
+
+  if [ $# -lt 2 ]; then
+    echo "ERROR: Not enough parameters"
+    return 255
+  fi
+
+  label=$1
+  shift
+  if [ $1 == "prefix" ]; then
+    mode=0
+    shift
+  elif [ $1 == "suffix" ]; then
+    mode=1
+    shift
+  else
+    mode=1
+  fi
+
+  for file in $*; do
+    dir=`dirname $file`
+    f=`basename $file`
+    ext="${f##*.}"
+    name="${f%.*}"
+    if [ $mode -eq 0 ]; then
+      res="$dir/$label$name"
+    else
+      res="$dir/$name$label"
+    fi
+    if [ "x"$ext != "x" ]; then
+      res="$res.$ext"
+    fi
+    echo "$file => $res"
+    if [ $PLUZE_DRYRUN -eq 0 ]; then
+      mv "$file" "$res"
+    fi
+  done
+}

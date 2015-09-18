@@ -1,0 +1,78 @@
+#!/bin/bash
+
+##DOC: Web scrapping tools
+##DOC:
+
+##DOC: hrefs <file> <url> | <url>
+##DOC:   Extract reference urls
+function hrefs() {
+
+  if [ $# -eq 0 ]; then
+    echo "ERROR: no parameters found"
+    return 255
+  fi
+
+  if [ -a $1 ]; then
+    comm="cat $1"
+    url=$2
+  else
+    comm="curl $1" 
+    url=$1
+  fi 
+
+  eval $comm | grep -i "<a" | grep -i "href" > /tmp/ahrefs.sh.tmp
+
+  #domain=`echo $url | awk 'BEGIN{FS="/"}{ print $1"/"$2"/"$3; }'`
+  parent=`echo $url | awk 'BEGIN{FS="/"}{for(i=1;i<NF;i++) printf "%s/",$i; }'`
+
+  IFS="
+"
+  for line in `cat /tmp/ahrefs.sh.tmp`; do
+    echo $line | awk -v p=$parent '
+    BEGIN{FS="href=\""}{ 
+     for(i=2;i<=NF;i++) { 
+       split($i,parts,"\"");
+       if (index(parts[1],"http")==1) printf "%s\n", parts[1];
+       else printf "%s%s\n", p, parts[1]; 
+     }
+    }'
+  done
+
+  rm -f /tmp/ahrefs.sh.tmp
+}
+
+##DOC: imgs <file> <url> | <url>
+function imgs() {
+  if [ $# -eq 0 ]; then
+    echo "ERROR: no parameters found"
+    return 255
+  fi
+
+  if [ -a $1 ]; then
+    comm="cat $1"
+    url=$2
+  else
+    comm="curl $1" 
+    url=$1
+  fi 
+
+  eval $comm | grep -i "<img" | grep -i "src" > /tmp/imgs.sh.tmp
+
+  #domain=`echo $url | awk 'BEGIN{FS="/"}{ print $1"/"$2"/"$3; }'`
+  parent=`echo $url | awk 'BEGIN{FS="/"}{for(i=1;i<NF;i++) printf "%s/",$i; }'`
+
+  IFS="
+"
+  for line in `cat /tmp/imgs.sh.tmp`; do
+    echo $line | awk -v p=$parent '
+    BEGIN{FS="src=\""}{ 
+     for(i=2;i<=NF;i++) { 
+       split($i,parts,"\"");
+       if (index(parts[1],"http")==1) printf "%s\n", parts[1];
+       else printf "%s%s\n", p, parts[1]; 
+     }
+    }'
+  done
+
+  rm -f /tmp/imgs.sh.tmp
+}

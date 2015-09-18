@@ -1,0 +1,132 @@
+#!/bin/bash
+
+##DOC: SO common operations
+##DOC:
+
+##DOC: psef <filter>: Find processes 
+function psef() {
+  ps -ef | grep -v grep | grep $1
+}
+
+##DOC: d: date
+function d() {
+  date | awk '{print $1 " " $3 "/" $2 "/" $6}'
+}
+
+##DOC: t: time
+function t() {
+  date | awk '{print $4}'
+}
+
+##DOC: htail <file_name> (ini) (end): Displays a chunck of a given text file
+##DOC:   <file_name>           lists the whole file
+##DOC:   <file_name> ini       lists file from "ini" on
+##DOC:   <file_name> -ini      lists file up to "ini"
+##DOC:   <file_name> ini end   lists file from "ini" to "end"
+##DOC:   <file_name> ini -end  lists "end" lines from file starting at ini
+function htail() {
+local ini
+local end
+local f
+local n
+
+  ini=0
+  end=0
+  f=$1
+  shift
+
+  if [ $# -eq 0 ]; then
+    cat $f # list the whole file
+  elif [ $# -eq 1 ]; then
+    if [ $1 -gt 0 ]; then 
+      tail -n +$1 $f # list file from $2
+    else
+      n=$[-1*$1]
+      head -n $n $f # list file up to $2
+    fi
+  elif [ $# -eq 2 ]; then
+    if [ $2 -ge 0 ]; then 
+      tail -n +$1 $f | head -$[$2-$1+1] # list file from $2 to $3
+    else 
+      n=$[-1*$2]
+      tail -n +$1 $f | head -n $n # list $3 lines from file starting at $2
+    fi
+  fi
+}
+
+##DOC: traverse <command> <file+>:
+##DOC:   execute command to all the files passed
+function traverse() {
+local comm
+local c
+local i
+
+  if [ $# -lt 2 ]; then
+    echo "ERROR: Missing parameters"
+    return 255
+  fi
+
+  comm=$1
+  shift
+
+  IFS="
+"
+  for i in $*; do
+    c="$comm \"$i\""
+    echo $c
+    if [ $PLUZE_DRYRUN -eq 0 ]; then
+      eval $c
+    fi
+  done
+}
+
+##DOC: file_traverse <command> <file>:
+##DOC:   execute command to all the lines in file
+function file_traverse() {
+local i
+local comm
+
+  if [ $# -lt 2 ]; then
+    echo "ERROR: Missing parameters"
+    return 255
+  fi
+
+  IFS="
+"
+  for i in `cat $2`; do
+    comm="$1 "$i""
+    echo $comm
+    if [ $PLUZE_DRYRUN -eq 0 ]; then
+      eval $comm
+    fi
+  done
+}
+
+##DOC: folder_dups <folder>:
+##DOC:   Finds duplicates inside a folder
+function folder_dups() {
+local orig_folder
+local file
+local other
+
+  if [ $# -eq 0 ]; then 
+    echo "ERROR: no folder parameter passed"
+    return 255
+  fi
+  orig_folder=$1
+
+  IFS="
+"
+  for file in `find $orig_folder -type f`; do
+    #echo $file ...
+    for other in `find $orig_folder -type f`; do
+      if [ $file != $other ]; then
+        diff -q "$file" "$other" > /dev/null
+        if [ $? -eq 0 ]; then
+          echo "  $file and $other : SAME FILE"
+        fi
+      fi
+    done
+  done
+}
+

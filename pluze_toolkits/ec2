@@ -1,0 +1,69 @@
+#!/bin/bash
+
+##DOC: Amazon EC2 management
+##DOC:
+
+##DOC: start <instance,ip>: start instance
+function start() {
+local instance
+
+  if [ $# -eq 0 ]; then
+    echo "ERROR: instance parameter missing"
+    return 255
+  fi
+
+  instance=`echo $1 | cut -d "," -f 1`
+  echo ec2start $instance
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    ec2start $instance
+  fi
+}
+
+##DOC: stop <instance,ip>: stop instance
+function stop() {
+local instance
+
+  if [ $# -eq 0 ]; then
+    echo "ERROR: instance parameter missing"
+    return 255
+  fi
+
+  instance=`echo $1 | cut -d "," -f 1`
+  echo ec2stop $instance
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    ec2stop $instance
+  fi
+}
+
+##DOC: associate <instance,ip>: associate instance with ip
+function associate() {
+local instance
+local ip
+
+  if [ $# -eq 0 ]; then
+    echo "ERROR: instance parameter missing"
+    return 255
+  fi
+
+  instance=`echo $1 | cut -d "," -f 1`
+  ip=`echo $1 | cut -d "," -f 2`
+  echo ec2assocaddr $ip -i $instance
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    ec2assocaddr $ip -i $instance
+  fi
+}
+
+##DOC: open <port> <group>: open port for security group
+function open() {
+local grp
+
+  if [ $# -ne 2 ]; then
+    echo "ERROR: instance parameter missing"
+    return 255
+  fi
+  
+  echo thor ec2:open_port_group $1 $2
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    thor ec2:open_port_group $1 $2
+  fi
+}
