@@ -4,4 +4,4 @@
 
 pluze_load "csv"
 
-pluze_run $*
+pluze_run "$@"

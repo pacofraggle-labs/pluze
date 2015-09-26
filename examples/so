@@ -4,4 +4,4 @@
 
 pluze_load "so_basic"
 
-pluze_run $*
+pluze_run "$@"

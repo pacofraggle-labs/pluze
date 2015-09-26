@@ -4,4 +4,4 @@
 
 pluze_load "so_filenames"
 
-pluze_run $*
+pluze_run "$@"

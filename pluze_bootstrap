@@ -1,24 +1,64 @@
 #!/bin/bash
 
+# PLUZE is both a launcher for existing toolkits - library functions (stored in script files that can be sourced) - and
+# a documentation manager for those function libraries.
+# Toolkits are assumed to be independent and contain methods that you want to call from other scripts. Please notice that
+# any code outside of a function in a toolkit will be executed during the load time.
+#
+# PLUZE is based on 3 very simple methods:
+#
+#  1. pluze_load(): sources a toolkit file
+#  2. pluze_help(): finds help for a toolkit or a toolkit method
+#  3. pluze run(): executes a toolkit method
+#
+# The basic usage of PLUZE goes like this:
+#  #!/bin/bash
+#
+#  shfolder=`dirname $0`
+#  . "$PLUZE_BOOTSTRAP_DIR/pluze_bootstrap" <= bootstrap pluze
+#
+#  pluze_load "git"              <= load the "git" toolkit functions. You can load as many toolkits as you need at any time
+#
+#  pluze_run $*                  <= execute the function in $1 passing the rest of arguments as function parameters
+#
 # Accepted environment variables:
-#   PLUZE_DRYRUN
-#   PLUZE_VERBOSE
-#   PLUZE_TOOLKITS_DIR
+#   PLUZE_DRYRUN:        Set dryrun on. Please notice that the dryrun behaviour has to be implemented in the method you are calling
+#                        dryrun mode can be enabled passing the --dryrun parameter
+#   PLUZE_VERBOSE:       Show verbose information
+#   PLUZE_TOOLKITS_DIR:  Where to find the toolkits
+#   PLUZE_BOOTSTRAP_DIR: Where to find the bootstrap script
 # 
-# Managed variables:
-#   pluze_toolkits
-#   pluze_functions
+# Internally managed variables:
+#   pluze_toolkits:  List of loaded toolkits (so that they are not loaded more than once)
+#   pluze_functions: Available loaded functions. Only these methods can be executed using PLUZE.
+#                    Please notice that internal functions need to be marked with "# Internal" comment like this:
+#                      function f() { # Internal
+#
+# The help information is retrieved when using the -h or the --help parameter.
+# If no method is passed then the help for all loaded toolkits will be shown. If a method is passed the help for that method
+# will be shown.
+# Toolkit files and methods should be documented using the following pattern:
+#
+#  ##DOC: ffmpeg classic usages                <= This is the Toolkit file general documentation
+#  ##DOC:
+#
+#  ##DOC: convert <format> <quality> <file>:  <= Method description
+#  ##DOC:   format:  avi, mp4, mpg, etc       <= Parameters description
+#  ##DOC:   quality: 3, 4, 5, etc
+#  ##DOC:   file:    File to convert
+
 
 
 # Load toolkit file functions
 #
-# Load order: PLUZE_TOOLKITS_DIR, environment_dir/pluze_toolkits, ~/bin/pluze_toolkits, ./pluze_toolkits 
+# Load order: PLUZE_TOOLKITS_DIR, bootstrap_dir/pluze_toolkits, ~/bin/pluze_toolkits, ./pluze_toolkits 
 #   $1:     requested functions library
 #   return: 0 if loaded, 1 otherwise
 function pluze_load() {
 local loaded
 local env_dir
 local func
+local dir
 local t
 
   loaded=1
@@ -85,6 +125,8 @@ local i
 }
 
 # Show available help for a given method
+#
+#   $1: method name
 function pluze_method_help() {
 local ini
 local end
@@ -161,13 +203,18 @@ local result
 
   declare -a params
 
+  # The first argument is the method name
+  # The rest of arguments are th method parameters
   i=0
-  for arg in $*; do
-    if [ $arg == "--dryrun" ]; then
+  for arg in "$@"; do # Iterate all parameters
+    if [ $PLUZE_VERBOSE -ne 0 ]; then
+      echo "argument($i/$#): $arg"
+    fi
+    if [ "$arg" == "--dryrun" ]; then
       PLUZE_DRYRUN=1
-    elif [ $arg == "--help" ]; then
+    elif [ "$arg" == "--help" ]; then
       show_help=1
-    elif [ $arg == "-h" ]; then
+    elif [ "$arg" == "-h" ]; then
       show_help=1
     else
       if [ $i -eq 0 ]; then
@@ -179,21 +226,20 @@ local result
     fi
   done
   if [ $show_help -eq 1 ]; then
-    if [ -z $method ]; then
+    if [ -z $method ]; then # All available methods help
       pluze_help
-    else
+    else # Help for a given method
       pluze_method_help $method
     fi
     result=1
   else
     pluze_is_method_available $method
     if [ $? -eq 0 ]; then
-      com="$method ${params[*]}"
       if [ $PLUZE_VERBOSE -ne 0 ]; then
-        echo "pluze_run detects method [$method] and params [${params[*]}]"
+        echo "pluze_run detects method [$method] and" "${#params[@]}" "param(s) [${params[*]}]"
       fi
 
-      eval $com
+      $method "${params[@]}"
       result=$?
 
       if [ $PLUZE_DRYRUN -ne 0 ]; then

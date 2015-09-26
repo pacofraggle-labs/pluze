@@ -4,4 +4,4 @@
 
 pluze_load "mac_basic"
 
-pluze_run $*
+pluze_run "$@"

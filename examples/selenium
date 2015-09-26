@@ -4,4 +4,4 @@
 
 pluze_load "selenium"
 
-pluze_run $*
+pluze_run "$@"

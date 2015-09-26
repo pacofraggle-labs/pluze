@@ -4,4 +4,4 @@
 
 pluze_load "ssh_server"
 
-pluze_run $*
+pluze_run "$@"

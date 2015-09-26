@@ -4,4 +4,4 @@
 
 pluze_load "taskwarrior"
 
-pluze_run $*
+pluze_run "$@"

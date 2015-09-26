@@ -4,4 +4,4 @@
 
 pluze_load "webscraping"
 
-pluze_run $*
+pluze_run "$@"

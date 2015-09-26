@@ -4,4 +4,4 @@
 
 pluze_load "ec2"
 
-pluze_run $*
+pluze_run "$@"

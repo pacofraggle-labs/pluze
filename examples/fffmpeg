@@ -4,4 +4,4 @@
 
 pluze_load "ffmpeg"
 
-pluze_run $*
+pluze_run "$@"
