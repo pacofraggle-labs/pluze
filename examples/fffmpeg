@@ -1,7 +1,6 @@
 #!/bin/bash
 
-shfolder=`dirname $0`
-. "$shfolder/pluze_bootstrap"
+. "$PLUZE_BOOTSTRAP_DIR/pluze_bootstrap"
 
 pluze_load "ffmpeg"
 
