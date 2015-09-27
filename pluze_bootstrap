@@ -40,7 +40,6 @@
 # The basic usage of PLUZE goes like this:
 #  #!/bin/bash
 #
-#  shfolder=`dirname $0`
 #  . "$PLUZE_BOOTSTRAP_DIR/pluze_bootstrap" <= bootstrap pluze
 #
 #  pluze_load "git"              <= load the "git" toolkit functions. You can load as many toolkits as you need at any time
