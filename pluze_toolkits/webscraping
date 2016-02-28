@@ -27,10 +27,12 @@ function hrefs() {
 
   IFS="
 "
-  for line in `cat /tmp/ahrefs.sh.tmp`; do
+  for line in `cat /tmp/ahrefs.sh.tmp | tr "[:upper:]" "[:lower:]"`; do
     echo $line | awk -v p=$parent '
-    BEGIN{FS="href=\""}{ 
+    BEGIN{FS="href"}{ 
      for(i=2;i<=NF;i++) { 
+       gsub(" ", "", $i);
+       sub("=\"", "", $i);
        split($i,parts,"\"");
        if (index(parts[1],"http")==1) printf "%s\n", parts[1];
        else printf "%s%s\n", p, parts[1]; 
@@ -63,10 +65,12 @@ function imgs() {
 
   IFS="
 "
-  for line in `cat /tmp/imgs.sh.tmp`; do
+  for line in `cat /tmp/imgs.sh.tmp | tr "[:upper:]" "[:lower:]"`; do
     echo $line | awk -v p=$parent '
-    BEGIN{FS="src=\""}{ 
+    BEGIN{FS="src"}{ 
      for(i=2;i<=NF;i++) { 
+       gsub(" ", "", $i);
+       gsub("=\"", "", $i);
        split($i,parts,"\"");
        if (index(parts[1],"http")==1) printf "%s\n", parts[1];
        else printf "%s%s\n", p, parts[1]; 

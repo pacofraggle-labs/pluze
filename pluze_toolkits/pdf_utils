@@ -1,0 +1,105 @@
+#!/bin/bash
+
+##DOC: PDF manipulation. Requires pdftk, pdfjam, psutils (texlive)
+##DOC:
+
+##DOC: pages <file> <page+>: Selects the pages from the pdf file
+function pages() {
+local in
+local out
+
+  if [ $# -lt 2 ]; then
+    echo "ERROR: not enough parameters"
+    return 255
+  fi
+
+  in=$1
+  shift
+  out=`basename $in .pdf`
+  out=$out-pages.pdf
+
+  echo pdftk $in cat $* output $out
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    pdftk $in cat $* output $out
+  fi
+  echo "Output: $out"
+}
+
+##DOC: rotate <file> (dir)
+##DOC:    Default dir is east
+function rotate() {
+local in
+local out
+local dir
+  if [ $# -lt 1 ]; then
+    echo "ERROR: not enough parameters"
+    return 255
+  fi
+  in=$1
+  shift
+  out=`basename $in .pdf` 
+
+  if [ $# -gt 0 ]; then
+    dir=$1
+  else
+    dir="east"
+  fi
+
+  echo "pdftk $in cat 1-end$dir output $out-rotated-$dir.pdf"
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    pdftk $in cat 1-end$dir output $out-rotated-$dir.pdf
+  fi
+  echo "Output: $out-rotated-$dir.pdf"
+}
+
+##DOC: book <file> (--crop) (--fold)
+##DOC:   --crop Fixes margins
+##DOC:   --fold Rearranges pages for sheet folding (psbook)
+function book() {
+local in
+local base
+local i
+
+  if [ $# -lt 1 ]; then
+    echo "ERROR: missing file"
+    return 255
+  fi
+  in=$1
+  shift
+  out=`basename $in .pdf`
+
+  cp $in step1-$in
+  for i in $*; do
+    if [ $i == "--crop" ]; then
+      echo "pdfcrop --margins 12 step1-$in tmp-$in"
+      echo "mv tmp-$in step1-$in"
+      if [ $PLUZE_DRYRUN -eq 0 ]; then
+        pdfcrop --margins 12 step1-$in tmp-$in
+        mv tmp-$in step1-$in
+      fi
+    elif [ $i == "--fold" ]; then
+      echo "pdf2ps step1-$in"
+      echo "psbook step1-$out.ps step2-$out.ps"
+      echo "ps2pdf step2-$out.ps step1-$in"
+      if [ $PLUZE_DRYRUN -eq 0 ]; then
+        pdf2ps step1-$in
+        psbook step1-$out.ps step2-$out.ps
+        ps2pdf step2-$out.ps step1-$in
+      fi
+    fi
+  done  
+
+  echo "pdfnup step1-$out.pdf --nup 2x1"
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    pdfnup step1-$out.pdf --nup 2x1
+  fi
+
+  echo "pdftk step1-$out-nup.pdf cat 1-end output $out-booklet.pdf"
+  if [ $PLUZE_DRYRUN -eq 0 ]; then
+    pdftk step1-$out-nup.pdf cat 1-end output $out-booklet.pdf
+  fi
+
+  rm -f step{1,2}-$out* tmp$in
+  echo "Output: $out-booklet.pdf"
+}
+

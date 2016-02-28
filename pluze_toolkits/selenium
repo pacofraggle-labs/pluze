@@ -3,13 +3,13 @@
 ##DOC: Generation of selenium files
 ##DOC:
 
-##DOC: batchOpen <base_url> <file> : Create test to access the resources defined in the file
+##DOC: batchOpen <base_url> <file> (pause): Create test to access the resources defined in the file
 function batchOpen() {
 local line
 IFS="
 "
 
-  if [ $# -ne 2 ]; then
+  if [ $# -lt 2 ]; then
     echo "ERROR: two parameters expected"
     return 255
   fi
@@ -21,6 +21,13 @@ IFS="
     addParam $line
     addParam ""
     endLine
+    if [ $# -eq 3 ]; then 
+      beginLine
+      addParam "pause"
+      addParam ""
+      addParam $3
+      endLine
+    fi
   done
   endDoc
 }

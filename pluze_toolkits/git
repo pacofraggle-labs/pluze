@@ -8,13 +8,13 @@ function s() {
   git status
 }
 
-##DOC: cfg <user.name> <user.email>: Change user.email
-function cfg() {
+##DOC: usercfg <user.name> <user.email>: Change user.email
+function usercfg() {
   if [ $# -ne 2 ]; then
-    echo "ERROR: 2 parameters exected"
+    echo "ERROR: 2 parameters exected, $# passed ($*)"
     return 255
   fi
-  echo git config --global user.name "$1"
+  echo git config --global user.name \"$1\"
   echo git config --global user.email $2
   if [ $PLUZE_DRYRUN -eq 0 ]; then
     git config --global user.name "$1"

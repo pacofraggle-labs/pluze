@@ -1,6 +1,7 @@
 #!/bin/bash
 
-##DOC: Amazon EC2 management
+##DOC: Amazon EC2 intances wrapper functions for server management
+##DOC: IMPORTANT: This toolkit requires EC2 Tools and thor
 ##DOC:
 
 ##DOC: start <instance,ip>: start instance

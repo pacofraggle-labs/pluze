@@ -7,6 +7,7 @@ In a way it is a very rudimentary Bash implementation of the import/require libr
 
 I would find it hard to believe that there are not other more powerful tools like this one for shell programming.
 However I've never come across any of them and it was simpler for me to implement this basic tool.
+There's also here nothing that you can do much better using _rake_, _thor_, ... but I didn't want to have any dependency on installed programming languages.
 
 For me, this all started when I got tired of writing `git push origin master` (I prefer `g pom`)  and other git related functions.
 I know that I can use aliases but then I noticed that I was also constantly repeating myself and forgetting about the syntax when I needed to use ffmpeg, when I had to work with production servers, rename files, and so on.

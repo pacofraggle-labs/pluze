@@ -1,6 +1,6 @@
 #!/bin/bash
 
-##DOC: Operations over CSV files. 
+##DOC: Operations for CSV files. 
 ##DOC: Warning: no delimiter except for "," is being taken into account
 ##DOC:
 

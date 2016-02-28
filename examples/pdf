@@ -1,0 +1,7 @@
+#!/bin/bash
+
+. "$PLUZE_BOOTSTRAP_DIR/pluze_bootstrap"
+
+pluze_load "pdf_utils"
+
+pluze_run "$@"
